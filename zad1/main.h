@@ -21,4 +21,18 @@ int is_prime(int n) {
     return 1;
 }
 
+struct msg {
+    long mtype;
+    int client_id;
+    int number;
+    int is_prime;
+};
+
+#define MAXCLIENTS 10
+
+#define NEWCLNT 1
+#define SERACCLIENT 2
+#define CLRESP 3
+#define GETNEXT 4
+
 #endif //ZAD1_MAIN_H

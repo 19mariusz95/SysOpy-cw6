@@ -58,6 +58,6 @@ int main(int argc, char *argv[]) {
         msgsnd(server, &message, sizeof(message), 0);
         sleep(1);
     }
-    msgctl(server, IPC_RMID, 0);
+    msgctl(client_queue, IPC_RMID, 0);
     exit(0);
 }

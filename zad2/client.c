@@ -11,7 +11,6 @@
 
 int server;
 int client_queue;
-int flaga = 1;
 
 void handler(int sig) {
     exit(0);

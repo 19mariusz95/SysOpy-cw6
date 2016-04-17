@@ -9,7 +9,6 @@
 #include <sys/stat.h>
 
 int zakonnica;
-int flaga = 1;
 static int clients[MAXCLIENTS];
 
 

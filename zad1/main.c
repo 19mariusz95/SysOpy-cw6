@@ -9,8 +9,12 @@
 
 int zakonnica;
 int flaga = 1;
+
+void init_clients();
+
+int get_id();
+
 static int clients[MAXCLIENTS];
-static int new_id = 0;
 
 
 void handler(int sig) {
@@ -33,13 +37,16 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, handler);
     srand(time(NULL));
 
+    init_clients();
+
     while (flaga) {
         struct msg message;
         if (msgrcv(zakonnica, &message, sizeof(message), 0, IPC_NOWAIT) >= 0) {
             long type = message.mtype;
             switch (type) {
                 case NEWCLNT: {
-                    if (new_id < MAXCLIENTS) {
+                    int new_id = get_id();
+                    if (new_id !=-1) {
                         int cl = message.client_id;
                         clients[new_id] = message.client_id;
                         message.mtype = SERACCLIENT;
@@ -48,7 +55,6 @@ int main(int argc, char *argv[]) {
                             perror(NULL);
                             exit(2);
                         }
-                        new_id++;
                     }
                     break;
                 }
@@ -72,5 +78,19 @@ int main(int argc, char *argv[]) {
     if (kisiel == -1) {
         printf("error");
         exit(1);
+    }
+}
+
+int get_id() {
+    for(int i=0;i<MAXCLIENTS;i++){
+        if(clients[i]==-1)
+            return i;
+    }
+    return -1;
+}
+
+void init_clients() {
+    for(int i=0;i<MAXCLIENTS;i++){
+        clients[i]=-1;
     }
 }

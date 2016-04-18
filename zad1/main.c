@@ -8,7 +8,6 @@
 #include "main.h"
 
 int zakonnica;
-int flaga = 1;
 
 void init_clients();
 
@@ -18,28 +17,40 @@ static int clients[MAXCLIENTS];
 
 
 void handler(int sig) {
-    flaga = 0;
+    exit(0);
+}
+
+void close() {
+    int kisiel = msgctl(zakonnica, IPC_RMID, NULL);
+    if (kisiel == -1) {
+        perror(NULL);
+    }
 }
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        printf("trolololo");
+        printf("Not enough arguments");
         exit(1);
     }
     key_t habit = ftok(argv[1], atoi(argv[2]));
+    if (habit < 0) {
+        perror(NULL);
+        exit(1);
+    }
     zakonnica = msgget(habit, IPC_CREAT | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH
                               | S_IWOTH);
     if (zakonnica == -1) {
-        printf("error");
-        exit(1);
+        perror(NULL);
+        exit(2);
     }
 
     signal(SIGINT, handler);
     srand(time(NULL));
+    atexit(close);
 
     init_clients();
 
-    while (flaga) {
+    while (1) {
         struct msg message;
         if (msgrcv(zakonnica, &message, sizeof(message), 0, IPC_NOWAIT) >= 0) {
             long type = message.mtype;
@@ -73,11 +84,6 @@ int main(int argc, char *argv[]) {
                     break;
             }
         }
-    }
-    int kisiel = msgctl(zakonnica, IPC_RMID, NULL);
-    if (kisiel == -1) {
-        printf("error");
-        exit(1);
     }
 }
 

@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
     server = mq_open("/server", O_WRONLY, 0, &attr);
     client_queue = mq_open(queue_name, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR, &attr);
 
-    if (client_queue == -1) {
-        perror("client queue open");
+    if (client_queue == -1 || server == -1) {
+        perror("client or server queue open");
         exit(2);
     }
     signal(SIGINT, handler);
@@ -46,17 +46,21 @@ int main(int argc, char *argv[]) {
     if (garek < 0) {
         perror(NULL);
     }
-    int ala = mq_receive(client_queue, message, MAX_SIZE, 0);
+    ssize_t ala = mq_receive(client_queue, message, MAX_SIZE, 0);
     if (ala < 0) {
         perror(NULL);
         exit(2);
     }
     atexit(clean);
-    printf("registered\n");
 
     int client_id;
     sscanf(message + 1, "%d", &client_id);
     printf("client id : %d\n", client_id);
+    if (client_id == -1) {
+        printf("not registered");
+        exit(1);
+    }
+    printf("registered\n");
 
     while (1) {
         message[0] = GETNEXT;

@@ -54,15 +54,18 @@ int main(int argc, char *argv[]) {
             switch (type) {
                 case NEWCLNT: {
                     int new_id = get_id();
+                    int cl_q = -1;
                     if (new_id != -1) {
-                        int cl_q = mq_open(message + 1, O_WRONLY, 0, &attr);
+                        cl_q = mq_open(message + 1, O_WRONLY, 0, &attr);
                         clients[new_id] = cl_q;
-                        message[0] = SERACCLIENT;
-                        sprintf(message + 1, "%d", new_id);
-                        if (mq_send(cl_q, message, MAX_SIZE, 0)) {
-                            perror("send");
-                            exit(2);
-                        }
+                        if (cl_q == -1)
+                            new_id = -1;
+                    }
+                    message[0] = SERACCLIENT;
+                    sprintf(message + 1, "%d", new_id);
+                    if (mq_send(cl_q, message, MAX_SIZE, 0)) {
+                        perror("send");
+                        exit(2);
                     }
                     break;
                 }

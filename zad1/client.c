@@ -11,12 +11,19 @@ int client_queue;
 int flaga = 1;
 
 void handler(int sig) {
-    flaga = 0;
+    exit(0);
+}
+
+void closemsg() {
+    if (msgctl(client_queue, IPC_RMID, 0) < 0) {
+        perror(NULL);
+        exit(4);
+    }
 }
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        printf("trolololo");
+        printf("2 arguments expexted\n");
         exit(1);
     }
     int n = atoi(argv[1]);
@@ -24,23 +31,23 @@ int main(int argc, char *argv[]) {
     server = msgget(ftok(argv[1], n), S_IWUSR | S_IRUSR | S_IWGRP | S_IROTH | S_IWOTH);
     client_queue = msgget(IPC_PRIVATE, S_IWUSR | S_IRUSR | S_IWGRP | S_IROTH | S_IWOTH);
 
-    if (client_queue == -1) {
-        printf("error");
+    if (client_queue == -1 || server == -1) {
+        perror(NULL);
         exit(2);
     }
     signal(SIGINT, handler);
+    atexit(closemsg);
     struct msg message;
     message.mtype = NEWCLNT;
     message.client_id = client_queue;
     int garek = msgsnd(server, &message, sizeof(message), 0);
     if (garek < 0) {
-        printf("error\n");
-        perror("");
+        perror(NULL);
     }
-    int ala = msgrcv(client_queue, &message, sizeof(struct msg), SERACCLIENT, 0);
+    ssize_t ala = msgrcv(client_queue, &message, sizeof(struct msg), SERACCLIENT, 0);
 
     if (ala < 0) {
-        printf("error\n");
+        perror(NULL);
         exit(2);
     }
 
@@ -50,14 +57,21 @@ int main(int argc, char *argv[]) {
     while (flaga) {
         message.mtype = GETNEXT;
         message.client_id = client_id;
-        msgsnd(server, &message, sizeof(message), 0);
-        msgrcv(client_queue, &message, sizeof(message), GETNEXT, 0);
-        printf("%d\n", message.number);
+        if (msgsnd(server, &message, sizeof(message), 0) < 0) {
+            perror(NULL);
+            exit(2);
+        }
+        if (msgrcv(client_queue, &message, sizeof(message), GETNEXT, 0)) {
+            perror(NULL);
+            exit(3);
+        }
         message.is_prime = is_prime(message.number);
         message.mtype = CLRESP;
-        msgsnd(server, &message, sizeof(message), 0);
+        if (msgsnd(server, &message, sizeof(message), 0) < 0) {
+            perror(NULL);
+            exit(1);
+        }
         sleep(1);
     }
-    msgctl(client_queue, IPC_RMID, 0);
     exit(0);
 }

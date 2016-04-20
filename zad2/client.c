@@ -11,6 +11,7 @@
 
 int server;
 int client_queue;
+char queue_name[30];
 
 void handler(int sig) {
     exit(0);
@@ -21,6 +22,8 @@ void clean() {
     message[0] = CLSCLNT;
     mq_send(server, message, MAX_SIZE, 0);
     mq_close(server);
+    mq_close(client_queue);
+    mq_unlink(queue_name);
 }
 
 int main(int argc, char *argv[]) {
@@ -29,7 +32,6 @@ int main(int argc, char *argv[]) {
     attr.mq_maxmsg = 10;
     attr.mq_msgsize = MAX_SIZE;
     attr.mq_curmsgs = 1;
-    char queue_name[30];
     sprintf(queue_name, "/client%d", getpid());
     server = mq_open("/server", O_WRONLY, 0, &attr);
     client_queue = mq_open(queue_name, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR, &attr);

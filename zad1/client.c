@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         printf("2 arguments expexted\n");
         exit(1);
     }
-    int n = atoi(argv[1]);
+    int n = atoi(argv[2]);
 
     server = msgget(ftok(argv[1], n), S_IWUSR | S_IRUSR | S_IWGRP | S_IROTH | S_IWOTH);
     client_queue = msgget(IPC_PRIVATE, S_IWUSR | S_IRUSR | S_IWGRP | S_IROTH | S_IWOTH);
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
             perror(NULL);
             exit(2);
         }
-        if (msgrcv(client_queue, &message, sizeof(message), GETNEXT, 0)) {
+        if (msgrcv(client_queue, &message, sizeof(message), GETNEXT, 0)<0) {
             perror(NULL);
             exit(3);
         }
